@@ -13,7 +13,7 @@ app.use(cors());
 const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     max: 60,
-    message: { error: 'Terlalu banyak request, silakan coba lagi nanti.' }
+    message: { error: 'Too many requests. Please try again later.' }
 });
 app.use(limiter);
 
@@ -21,9 +21,9 @@ const verifyJWT = (req, res, next) => {
     if (req.path.startsWith('/auth')) return next();
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Akses ditolak. Token tidak ditemukan.' });
+    if (!token) return res.status(401).json({ error: 'Access denied. Token not found.' });
     jwt.verify(token, process.env.JWT_SECRET || 'secret-key-sementara', (err, decoded) => {
-        if (err) return res.status(401).json({ error: 'Token tidak valid atau sudah kadaluarsa.' });
+        if (err) return res.status(401).json({ error: 'Invalid token or expired.' });
         req.user = decoded;
         next();
     });
