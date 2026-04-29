@@ -6,6 +6,7 @@ const { OAuth2Client } = require('google-auth-library');
 const db = require('./db');
 
 const app = express();
+const tokenBlacklist = new Set();
 const PORT = process.env.PORT;
 
 app.use(cors());
@@ -50,10 +51,6 @@ app.post('/auth/login', async (req, res) => {
     }
 });
 
-app.post('/auth/refresh', (req, res) => {
-    res.status(501).json({ message: '???' });
-});
-
 app.get('/auth/google/url', (req, res) => {
     const url = googleClient.generateAuthUrl({
         access_type: 'offline',
@@ -88,7 +85,7 @@ app.get('/auth/google/callback', async (req, res) => {
             );
             user = { id: result.insertId, name, email, photo, oauth_provider: 'google' };
         } else if (user.oauth_provider !== 'google') {
-             await db.query('UPDATE users SET oauth_provider = ?, photo = ? WHERE email = ?', ['google', photo, email]);
+            await db.query('UPDATE users SET oauth_provider = ?, photo = ? WHERE email = ?', ['google', photo, email]);
         }
         const accessToken = jwt.sign(
             { id: user.id, email: user.email, name: user.name },
@@ -116,8 +113,47 @@ app.get('/auth/google/callback', async (req, res) => {
     }
 });
 
+app.post('/auth/refresh', async (req, res) => {
+    const { refresh_token } = req.body;
+    if (!refresh_token) {
+        return res.status(401).json({ error: 'Refresh token is required.' });
+    }
+    jwt.verify(refresh_token, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ error: 'Invalid or expired refresh token.' });
+        }
+        try {
+            const [rows] = await db.query('SELECT id, name, email FROM users WHERE id = ?', [decoded.id]);
+            const user = rows[0];
+            if (!user) {
+                return res.status(404).json({ error: 'User not found.' });
+            }
+            const newAccessToken = jwt.sign(
+                { id: user.id, email: user.email, name: user.name },
+                process.env.JWT_SECRET,
+                { expiresIn: '15m' }
+            );
+            res.json({
+                message: 'Access token refreshed successfully.',
+                access_token: newAccessToken
+            });
+        } catch (error) {
+            console.error('Refresh Token Error:', error);
+            res.status(500).json({ error: 'Internal server error during token refresh.' });
+        }
+    });
+});
+
 app.post('/auth/logout', (req, res) => {
-    res.status(501).json({ message: '???' });
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(400).json({ error: 'Access token is required for logout.' });
+    }
+    tokenBlacklist.add(token);
+    res.json({ 
+        message: 'Logout successful. Token has been invalidated.' 
+    });
 });
 
 app.listen(PORT, () => {
