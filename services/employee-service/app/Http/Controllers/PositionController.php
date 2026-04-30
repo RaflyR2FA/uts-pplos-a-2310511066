@@ -36,11 +36,13 @@ class PositionController extends Controller
         ], 201);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $position = Position::find($id);
         if (!$position) {
-            return response()->json(['error' => 'Position not found.'], 404);
+            return response()->json([
+                'error' => 'Position not found.'
+            ], 404);
         }
         return response()->json([
             'message' => 'Position detail retrieved successfully.',
@@ -48,11 +50,13 @@ class PositionController extends Controller
         ], 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $position = Position::find($id);
         if (!$position) {
-            return response()->json(['error' => 'Position not found.'], 404);
+            return response()->json([
+                'error' => 'Position not found.'
+            ], 404);
         }
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255|unique:positions,name,' . $id,
@@ -71,11 +75,13 @@ class PositionController extends Controller
         ], 200);
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $position = Position::find($id);
         if (!$position) {
-            return response()->json(['error' => 'Position not found.'], 404);
+            return response()->json([
+                'error' => 'Position not found.'
+            ], 404);
         }
         if ($position->employees()->count() > 0) {
             return response()->json([

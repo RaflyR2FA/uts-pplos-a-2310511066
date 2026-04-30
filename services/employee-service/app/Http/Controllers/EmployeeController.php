@@ -48,11 +48,13 @@ class EmployeeController extends Controller
         ], 201);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $employee = Employee::with('position')->find($id);
         if (!$employee) {
-            return response()->json(['error' => 'Employee not found.'], 404);
+            return response()->json([
+                'error' => 'Employee not found.'
+            ], 404);
         }
         return response()->json([
             'message' => 'Employee detail retrieved successfully.',
@@ -60,11 +62,13 @@ class EmployeeController extends Controller
         ], 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $employee = Employee::find($id);
         if (!$employee) {
-            return response()->json(['error' => 'Employee not found.'], 404);
+            return response()->json([
+                'error' => 'Employee not found.'
+            ], 404);
         }
         $validator = Validator::make($request->all(), [
             'position_id' => 'sometimes|exists:positions,id',
@@ -86,11 +90,13 @@ class EmployeeController extends Controller
         ], 200);
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $employee = Employee::find($id);
         if (!$employee) {
-            return response()->json(['error' => 'Employee not found.'], 404);
+            return response()->json([
+                'error' => 'Employee not found.'
+            ], 404);
         }
         $employee->delete();
         return response()->json([
