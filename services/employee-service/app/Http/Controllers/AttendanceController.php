@@ -9,6 +9,20 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
+    public function index(Request $request)
+    {
+        $query = Attendance::query();
+        if ($request->has('month') && $request->has('year')) {
+            $query->whereMonth('date', $request->month)
+                  ->whereYear('date', $request->year);
+        }
+        $attendances = $query->get();
+        return response()->json([
+            'message' => 'Attendances retrieved successfully.',
+            'data' => $attendances
+        ], 200);
+    }
+
     public function clockIn(Request $request)
     {
         $validator = Validator::make($request->all(), [
