@@ -25,7 +25,15 @@ const initDB = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log('User table has been initialized successfully in the database.');
+        await connection.query(`
+            INSERT IGNORE INTO users 
+            (name, email, password, oauth_provider)
+            VALUES
+            ('Employee One', 'employee1@example.com', 'password123', 'local'),
+            ('Employee Two', 'employee2@example.com', 'password456', 'local'),
+            ('Admin User', 'admin@example.com', 'admin123', 'local')
+        `);
+        console.log('User table and dummy data initialized successfully.');
         connection.release();
     } catch (err) {
         console.error('Error initializing user table:', err);
