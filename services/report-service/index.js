@@ -19,10 +19,13 @@ app.post('/generate', async (req, res) => {
     const month = req.body.month || new Date().getMonth() + 1;
     const year = req.body.year || new Date().getFullYear();
     try {
-        const empRes = await axios.get(`${employeeService}/employees`);
-        const employees = empRes.data.data.data;
-        const attRes = await axios.get(`${employeeService}/attendances?month=${month}&year=${year}`);
-        const attendances = attRes.data.data;
+        const empRes = await axios.get(`${employeeService}/employees?per_page=all`);
+        const attRes = await axios.get(`${employeeService}/attendances?month=${month}&year=${year}&per_page=all`);
+        const employees = Array.isArray(empRes.data.data) ? empRes.data.data : empRes.data.data.data;
+        const attendances = Array.isArray(attRes.data.data) ? attRes.data.data : attRes.data.data.data;
+        if (!Array.isArray(employees) || !Array.isArray(attendances)) {
+            throw new Error('Data format from Employee Service is invalid.');
+        }
         const summary = employees.map(emp => {
             const empAttendances = attendances.filter(a => a.employee_id === emp.id);
             return {
@@ -48,7 +51,7 @@ app.post('/generate', async (req, res) => {
         });
     } catch (error) {
         console.error('Error generating report:', error.message);
-        res.status(500).json({ error: 'Failed to generate report. Ensure Employee Service is running.' });
+        res.status(500).json({ error: 'Failed to generate report. Check connections and data structures.' });
     }
 });
 
@@ -63,12 +66,19 @@ app.get('/attendance-summary', async (req, res) => {
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Report not found for this period. Please generate it first.' });
         }
+        let parsedData;
+        try {
+            parsedData = JSON.parse(rows[0].summary_data);
+        } catch (parseError) {
+            parsedData = rows[0].summary_data; 
+        }
         res.json({
             message: 'Report retrieved successfully.',
             period: `${month}-${year}`,
-            data: rows[0].summary_data
+            data: parsedData
         });
     } catch (error) {
+        console.error('Database error:', error);
         res.status(500).json({ error: 'Database error.' });
     }
 });

@@ -17,8 +17,12 @@ class EmployeeController extends Controller
         if ($request->has('search')) {
             $query->where('full_name', 'like', '%' . $request->search . '%');
         }
-        $perPage = $request->input('per_page', 10);
-        $employees = $query->with('position')->paginate($perPage);
+        if ($request->query('per_page') === 'all') {
+            $employees = $query->with('position')->get();
+        } else {
+            $perPage = $request->input('per_page', 10);
+            $employees = $query->with('position')->paginate($perPage);
+        }
         return response()->json([
             'message' => 'Employees retrieved successfully.',
             'data' => $employees

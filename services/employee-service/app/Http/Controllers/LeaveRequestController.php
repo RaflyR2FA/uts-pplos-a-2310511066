@@ -69,7 +69,7 @@ class LeaveRequestController extends Controller
         }
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:approved,rejected',
-            'approved_by' => 'required|integer' // Bisa ditambahkan dengan JWT auth untuk memastikan yang approve adalah manager
+            'approved_by' => 'required|integer'
         ]);
         if ($validator->fails()) {
             return response()->json([

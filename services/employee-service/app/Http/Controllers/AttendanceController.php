@@ -16,7 +16,12 @@ class AttendanceController extends Controller
             $query->whereMonth('date', $request->month)
                   ->whereYear('date', $request->year);
         }
-        $attendances = $query->get();
+        if ($request->query('per_page') === 'all') {
+            $attendances = $query->get();
+        } else {
+            $perPage = $request->query('per_page', 10);
+            $attendances = $query->paginate($perPage);
+        }
         return response()->json([
             'message' => 'Attendances retrieved successfully.',
             'data' => $attendances
@@ -27,7 +32,9 @@ class AttendanceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'employee_id' => 'required|exists:employees,id',
-            'notes' => 'nullable|string'
+            'is_absent' => 'boolean',
+            'absence_reason' => 'required_if:is_absent,true|in:sick,personal,other',
+            'notes' => 'required_if:absence_reason,other|nullable|string'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -42,34 +49,64 @@ class AttendanceController extends Controller
             ->first();
         if ($existing) {
             return response()->json([
-                'error' => 'Already clocked in today.'
+                'error' => 'Attendance for today has already been recorded.'
             ], 409);
+        }
+        $status = 'present';
+        $clockInTime = $now;
+        $finalNotes = $request->notes;
+        if ($request->is_absent) {
+            $status = 'absent';
+            $clockInTime = null;
+            if ($request->absence_reason === 'other') {
+                $finalNotes = $request->notes;
+            } else {
+                $reasonLabel = $request->absence_reason === 'sick' ? 'Sick' : 'Having personal matters';
+                $finalNotes = $reasonLabel . ($request->notes ? ' - ' . $request->notes : '');
+            }
+        } else {
+            $lateLimit = '08:00:00';
+            if ($now > $lateLimit) {
+                $status = 'late';
+            }
         }
         $attendance = Attendance::create([
             'employee_id' => $request->employee_id,
             'date' => $today,
-            'clock_in' => $now,
-            'status' => 'present',
-            'notes' => $request->notes
+            'clock_in' => $clockInTime,
+            'status' => $status,
+            'notes' => $finalNotes
         ]);
         return response()->json([
-            'message' => 'Clock-in successful.',
+            'message' => $status === 'absent' ? 'Absence recorded successfully.' : 'Clock-in successful.',
             'data' => $attendance
         ], 201);
     }
 
-    public function clockOut(Request $request, int $id)
+    public function clockOut(Request $request)
     {
-        $attendance = Attendance::find($id);
-        if (!$attendance) {
+        $validator = Validator::make($request->all(), [
+            'employee_id' => 'required|exists:employees,id'
+        ]);
+        if ($validator->fails()) {
             return response()->json([
-                'error' => 'Attendance record not found.'
-            ], 404);
+                'error' => 'Validation failed.',
+                'details' => $validator->errors()
+            ], 422);
         }
-        if ($attendance->clock_out) {
-            return response()->json([
-                'error' => 'Already clocked out.'
-            ], 409);
+        $attendance = Attendance::where('employee_id', $request->employee_id)
+            ->whereIn('status', ['present', 'late'])
+            ->whereNull('clock_out')
+            ->first();
+        if (!$attendance) {
+            $existing = Attendance::where('employee_id', $request->employee_id)->first();
+            if ($existing && $existing->clock_out) {
+                return response()->json(['error' => 'Already clocked out today.'], 409);
+            }
+            if ($existing && $existing->status === 'absent') {
+                return response()->json(['error' => 'Cannot clock out because employee is marked as absent today.'], 400);
+            }
+            return response()->json(['error' => 'No active attendance record found to clock out.'], 404);
         }
         $attendance->update(['clock_out' => Carbon::now()->toTimeString()]);
         return response()->json([
