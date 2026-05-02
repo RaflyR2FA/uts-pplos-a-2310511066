@@ -1,0 +1,336 @@
+{
+  "info": {
+    "name": "UTS PPLBS - Kepegawaian & Absensi",
+    "description": "API Collection for HR and Attendance Microservices. All requests are routed through API Gateway (Port 3000).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "paste_your_access_token_here",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "paste_your_refresh_token_here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth Service",
+      "item": [
+        {
+          "name": "1.1 Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/auth/status"
+          }
+        },
+        {
+          "name": "1.2 Login (Local)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"employee1@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        },
+        {
+          "name": "1.3 Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{base_url}}/auth/refresh"
+          }
+        },
+        {
+          "name": "1.4 Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/auth/logout"
+          }
+        },
+        {
+          "name": "1.5 Google OAuth URL",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/auth/google/url"
+          }
+        },
+        {
+          "name": "1.6 Google OAuth Callback",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auth/google/callback?code=your_auth_code_here",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google", "callback"],
+              "query": [
+                { "key": "code", "value": "your_auth_code_here" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Employee Service",
+      "item": [
+        {
+          "name": "Positions",
+          "item": [
+            {
+              "name": "Get All Positions",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": "{{base_url}}/api/positions"
+              }
+            },
+            {
+              "name": "Create Position",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Data Analyst\",\n  \"description\": \"Analyzes company data.\"\n}"
+                },
+                "url": "{{base_url}}/api/positions"
+              }
+            },
+            {
+              "name": "Update Position",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Senior Data Analyst\"\n}"
+                },
+                "url": "{{base_url}}/api/positions/1"
+              }
+            },
+            {
+              "name": "Delete Position",
+              "request": {
+                "method": "DELETE",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": "{{base_url}}/api/positions/1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Employees",
+          "item": [
+            {
+              "name": "Get Employees (Pagination & Filter)",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/employees?per_page=5&position_id=1&search=John",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "employees"],
+                  "query": [
+                    { "key": "per_page", "value": "5" },
+                    { "key": "position_id", "value": "1" },
+                    { "key": "search", "value": "John" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create Employee",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": 99,\n  \"position_id\": 1,\n  \"full_name\": \"Jane Doe\",\n  \"email\": \"janedoe@example.com\",\n  \"phone_number\": \"08123456789\",\n  \"hire_date\": \"2026-01-15\"\n}"
+                },
+                "url": "{{base_url}}/api/employees"
+              }
+            },
+            {
+              "name": "Get Employee Detail",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": "{{base_url}}/api/employees/1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Attendances",
+          "item": [
+            {
+              "name": "Get Attendances (Filtered)",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/attendances?month=5&year=2026",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "attendances"],
+                  "query": [
+                    { "key": "month", "value": "5" },
+                    { "key": "year", "value": "2026" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Clock In",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employee_id\": 1,\n  \"notes\": \"Arrived early today\"\n}"
+                },
+                "url": "{{base_url}}/api/attendances/clock-in"
+              }
+            },
+            {
+              "name": "Clock Out",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": "{{base_url}}/api/attendances/clock-out/1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Leave Requests",
+          "item": [
+            {
+              "name": "Get Leaves",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/leaves?status=pending",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "leaves"],
+                  "query": [
+                    { "key": "status", "value": "pending" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Submit Leave",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employee_id\": 1,\n  \"start_date\": \"2026-05-10\",\n  \"end_date\": \"2026-05-12\",\n  \"type\": \"annual\",\n  \"reason\": \"Family event\"\n}"
+                },
+                "url": "{{base_url}}/api/leaves"
+              }
+            },
+            {
+              "name": "Approve/Reject Leave",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"approved\",\n  \"approved_by\": 99\n}"
+                },
+                "url": "{{base_url}}/api/leaves/1/approval"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Report Service",
+      "item": [
+        {
+          "name": "3.1 Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/reports/status"
+          }
+        },
+        {
+          "name": "3.2 Generate Monthly Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"month\": 5,\n  \"year\": 2026\n}"
+            },
+            "url": "{{base_url}}/reports/generate"
+          }
+        },
+        {
+          "name": "3.3 View Attendance Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/reports/attendance-summary?month=5&year=2026",
+              "host": ["{{base_url}}"],
+              "path": ["reports", "attendance-summary"],
+              "query": [
+                { "key": "month", "value": "5" },
+                { "key": "year", "value": "2026" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
