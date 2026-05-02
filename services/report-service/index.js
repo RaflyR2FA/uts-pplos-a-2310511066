@@ -11,11 +11,11 @@ const employeeService = process.env.EMPLOYEE_SERVICE_URL;
 app.use(cors());
 app.use(express.json());
 
-app.get('/reports/status', (req, res) => {
+app.get('/status', (req, res) => {
     res.json({ message: 'Report Service is running smoothly!' });
 });
 
-app.post('/reports/generate', async (req, res) => {
+app.post('/generate', async (req, res) => {
     const month = req.body.month || new Date().getMonth() + 1;
     const year = req.body.year || new Date().getFullYear();
     try {
@@ -52,7 +52,7 @@ app.post('/reports/generate', async (req, res) => {
     }
 });
 
-app.get('/reports/attendance-summary', async (req, res) => {
+app.get('/attendance-summary', async (req, res) => {
     const month = req.query.month || new Date().getMonth() + 1;
     const year = req.query.year || new Date().getFullYear();
     try {

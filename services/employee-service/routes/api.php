@@ -11,12 +11,11 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('positions', PositionController::class);
-    Route::apiResource('employees', EmployeeController::class);
-    Route::get('attendances', [AttendanceController::class, 'index']);
-    Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn']);
-    Route::put('attendances/clock-out/{id}', [AttendanceController::class, 'clockOut']);
-    Route::apiResource('leaves', LeaveRequestController::class)->except(['update', 'destroy']);
-    Route::patch('leaves/{id}/approval', [LeaveRequestController::class, 'updateApproval']);
-});
+Route::apiResource('positions', PositionController::class);
+Route::apiResource('employees', EmployeeController::class);
+Route::get('attendances', [AttendanceController::class, 'index']);
+Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn']);
+Route::put('attendances/clock-out/{id}', [AttendanceController::class, 'clockOut']);
+Route::apiResource('leaves', LeaveRequestController::class)->except(['update', 'destroy']);
+Route::patch('leaves/{id}/approval', [LeaveRequestController::class, 'updateApproval']);
+

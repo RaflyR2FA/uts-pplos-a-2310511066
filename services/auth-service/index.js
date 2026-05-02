@@ -18,11 +18,11 @@ const googleClient = new OAuth2Client(
     process.env.GOOGLE_REDIRECT_URI
 );
 
-app.get('/auth/status', (req, res) => {
+app.get('/status', (req, res) => {
     res.json({ message: 'Auth Service is running smoothly!' });
 });
 
-app.post('/auth/login', async (req, res) => {
+app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const [rows] = await db.query('SELECT * FROM users WHERE email = ? AND password = ?', [email, password]);
@@ -51,7 +51,7 @@ app.post('/auth/login', async (req, res) => {
     }
 });
 
-app.get('/auth/google/url', (req, res) => {
+app.get('/google/url', (req, res) => {
     const url = googleClient.generateAuthUrl({
         access_type: 'offline',
         prompt: 'consent',
@@ -63,7 +63,7 @@ app.get('/auth/google/url', (req, res) => {
     res.json({ url });
 });
 
-app.get('/auth/google/callback', async (req, res) => {
+app.get('/google/callback', async (req, res) => {
     const code = req.query.code;
     if (!code) {
         return res.status(400).json({ error: 'Authorization code is missing.' });
@@ -113,7 +113,7 @@ app.get('/auth/google/callback', async (req, res) => {
     }
 });
 
-app.post('/auth/refresh', async (req, res) => {
+app.post('/refresh', async (req, res) => {
     const { refresh_token } = req.body;
     if (!refresh_token) {
         return res.status(401).json({ error: 'Refresh token is required.' });
@@ -144,7 +144,7 @@ app.post('/auth/refresh', async (req, res) => {
     });
 });
 
-app.post('/auth/logout', (req, res) => {
+app.post('/logout', (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) {
